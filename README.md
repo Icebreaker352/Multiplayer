@@ -1,4 +1,4 @@
-Skills
-Monsters - Drop Loot, & Armor
-Magic
-Different Villages
+- Skills
+- Monsters - Drop Loot, & Armor
+- Magic
+- Different Villages
