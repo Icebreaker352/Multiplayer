@@ -1,4 +1,4 @@
-import pygame, os, socket, json, assets.assets as assets
+import pygame, os, socket, json, assets.assets as assets, math
 
 os.system('clear')
 
@@ -46,7 +46,7 @@ class Controller:
 class Player:
     def __init__(self, rect, speed=5):
         self.rect = rect
-        self.atr = {'atkCool': 0}
+        self.atr = {'swd': {'cooldown': 0, 'angle': 0, 'pos': [0, 0]}}
         self.xv = 0
         self.yv = 0
         self.speed = speed
@@ -79,13 +79,15 @@ class Player:
                 if abs(obj.left - rect.right) < 10:
                     self.rect.x -= round(self.xv)
         # Change Attack Cooldown
-        if self.atr['atkCool'] > 0:
-            self.atr['atkCool'] -= 1
-    def attack(self):
-        if self.atr['atkCool'] > 0:
+        if self.atr['swd']['cooldown'] > 0:
+            self.atr['swd']['cooldown'] -= 1
+            self.atr['swd']['pos'][0] += 1
+    def attack(self, pos):
+        self.atr['swd']['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
+        self.atr['swd']['angle'] = 360-math.atan2(pos[1]-self.atr['swd']['pos'][1],pos[0]-self.atr['swd']['pos'][1])*180/math.pi
+        if self.atr['swd']['cooldown'] > 0:
             return
-        self.atr['atkCool'] = 30
-
+        self.atr['swd']['cooldown'] = 30
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
 
@@ -94,9 +96,8 @@ running = True
 while running:
     # Handle Events
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                player.attack()
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            player.attack(pygame.mouse.get_pos())
         # Quit Pygame
         if event.type == pygame.QUIT:
             running = False
@@ -117,9 +118,10 @@ while running:
         rect = json.loads(players[key])['rect']
         atr = json.loads(players[key])['atr']
         pygame.draw.rect(screen, color, pygame.Rect(rect[0], rect[1], rect[2], rect[3]))
-        if atr['atkCool'] > 0:
-            screen.blit(assets.get('sword', 4), (rect[0], rect[1]))
-
+        if atr['swd']['cooldown'] > 0:
+            img = pygame.transform.rotate(assets.get('sword', 4), atr['swd']['angle'] - 45)
+            rect = img.get_rect(center=(atr['swd']['pos'][0], atr['swd']['pos'][1]))
+            screen.blit(img, rect)
     pygame.display.update()
     # Set FPS
     clock.tick(60)
