@@ -72,12 +72,12 @@ class Player:
                 if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
                 if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
         # Change Attack Cooldown
-        if dagr['cooldown'] > 0:
-            dagr['cooldown'] -= 1
+        if self.dagr['cooldown'] > 0:
+            self.dagr['cooldown'] -= 1
             vec = pygame.math.Vector2()
             vec.from_polar((5, dagr['angle']*-1))
-            dagr['pos'][0] += vec[0]
-            dagr['pos'][1] += vec[1]
+            self.dagr['pos'][0] += vec[0]
+            self.dagr['pos'][1] += vec[1]
     def attack(self, pos):
         if dagr['cooldown'] > 0:
             return
