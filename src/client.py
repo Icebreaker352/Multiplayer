@@ -1,4 +1,5 @@
-import pygame, os, socket, json, assets.assets as assets, math
+import pygame, os, math, socket, json, assets.assets as assets
+from debug import debug
 
 os.system('clear')
 
@@ -72,10 +73,10 @@ class Player:
                 if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
                 if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
         # Change Attack Cooldown
-        if self.dagr['cooldown'] > 0:
-            self.dagr['cooldown'] -= 1
+        self.dagr['cooldown'] -= 1
+        if self.dagr['cooldown'] > 0 and self.dagr['cooldown'] < 30:
             vec = pygame.math.Vector2()
-            vec.from_polar((5, dagr['angle']*-1))
+            vec.from_polar((5, self.dagr['angle']*-1))
             self.dagr['pos'][0] += vec[0]
             self.dagr['pos'][1] += vec[1]
     def attack(self, pos):
@@ -83,7 +84,7 @@ class Player:
             return
         self.dagr['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
         self.dagr['angle'] = 360-math.atan2(pos[1]-self.dagr['pos'][1], pos[0]-self.dagr['pos'][0])*180/math.pi
-        self.dagr['cooldown'] = 30
+        self.dagr['cooldown'] = 45
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
 
@@ -120,6 +121,7 @@ while running:
             img = pygame.transform.rotate(assets.get('dagger', 4), dagr['angle'] - 45)
             rect = img.get_rect(center=(dagr['pos'][0], dagr['pos'][1]))
             screen.blit(img, rect)
+    debug(id)
     pygame.display.update()
     # Set FPS
     clock.tick(60)
