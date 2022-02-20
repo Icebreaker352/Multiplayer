@@ -82,7 +82,7 @@ class Player:
         if dagr['cooldown'] > 0:
             return
         self.dagr['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
-        self.dagr['angle'] = 360-math.atan2(pos[1]-self.atr['dagr']['pos'][1], pos[0]-self.atr['dagr']['pos'][0])*180/math.pi
+        self.dagr['angle'] = 360-math.atan2(pos[1]-self.dagr['pos'][1], pos[0]-self.dagr['pos'][0])*180/math.pi
         self.dagr['cooldown'] = 30
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
