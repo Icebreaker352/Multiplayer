@@ -26,9 +26,9 @@ class Msg:
         if msg_length:
             msg_length = int(msg_length)
             recv = json.loads(client.recv(msg_length).decode('utf-8'))
-            return recv     
+            return recv
 
-id = Msg('fetch', 'id').send()['data']
+id = Msg('fetch', 'id').send()
 pygame.init()
 screen = pygame.display.set_mode((400, 400))
 clock = pygame.time.Clock()
@@ -46,7 +46,8 @@ class Controller:
 class Player:
     def __init__(self, rect, speed=5):
         self.rect = rect
-        self.atr = {'swd': {'cooldown': 0, 'angle': 0, 'pos': [0, 0]}}
+        self.swd = {'cooldown': 0, 'angle': 0, 'pos': [0, 0]}
+        self.atr = {}
         self.xv = 0
         self.yv = 0
         self.speed = speed
@@ -55,14 +56,10 @@ class Player:
         # Movement
         self.xv = 0
         self.yv = 0
-        if keys["right"]:
-            self.xv = self.speed
-        if keys["left"]:
-            self.xv = -self.speed
-        if keys["up"]:
-            self.yv = -self.speed
-        if keys['down']:
-            self.yv = self.speed
+        if keys["right"]: self.xv = self.speed
+        if keys["left"]: self.xv = -self.speed
+        if keys["up"]: self.yv = -self.speed
+        if keys['down']: self.yv = self.speed
         self.rect.x += int(self.xv)
         self.rect.y += int(self.yv)
         # Object Collision®
@@ -70,24 +67,23 @@ class Player:
             rect = self.rect
             obj = pygame.Rect(obj[0], obj[1], obj[2], obj[3])
             if rect.colliderect(obj):
-                if abs(obj.top - rect.bottom) < 10:
-                    self.rect.y -= round(self.yv)
-                if abs(obj.bottom - rect.top) < 10:
-                    self.rect.y -= round(self.yv)
-                if abs(obj.right - rect.left) < 10:
-                    self.rect.x -= round(self.xv)
-                if abs(obj.left - rect.right) < 10:
-                    self.rect.x -= round(self.xv)
+                if abs(obj.top - rect.bottom) < 10: self.rect.y -= round(self.yv)
+                if abs(obj.bottom - rect.top) < 10: self.rect.y -= round(self.yv)
+                if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
+                if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
         # Change Attack Cooldown
-        if self.atr['swd']['cooldown'] > 0:
-            self.atr['swd']['cooldown'] -= 1
-            self.atr['swd']['pos'][0] += 1
+        if swd['cooldown'] > 0:
+            swd['cooldown'] -= 1
+            vec = pygame.math.Vector2()
+            vec.from_polar((5, swd['angle']*-1))
+            swd['pos'][0] += vec[0]
+            swd['pos'][1] += vec[1]
     def attack(self, pos):
-        self.atr['swd']['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
-        self.atr['swd']['angle'] = 360-math.atan2(pos[1]-self.atr['swd']['pos'][1],pos[0]-self.atr['swd']['pos'][1])*180/math.pi
-        if self.atr['swd']['cooldown'] > 0:
+        if swd['cooldown'] > 0:
             return
-        self.atr['swd']['cooldown'] = 30
+        self.swd['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
+        self.swd['angle'] = 360-math.atan2(pos[1]-self.atr['swd']['pos'][1], pos[0]-self.atr['swd']['pos'][0])*180/math.pi
+        self.swd['cooldown'] = 30
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
 
@@ -103,8 +99,9 @@ while running:
             running = False
     # Exchange Data
     rect = [player.rect.x, player.rect.y, player.rect.width, player.rect.height]
-    players = Msg('fetch', 'players', {'rect': rect, 'atr': player.atr}).send()['data']
-    objects = Msg('fetch', 'objects').send()['data']
+    players = Msg('fetch', 'players', {'rect': rect, 'atr': player.atr}).send()
+    objects = Msg('fetch', 'objects').send()
+    swords = Msg('fetch', 'swords', player.swd).send()
     # Tick
     player.tick(objects)
     # Render
@@ -116,11 +113,12 @@ while running:
         if key == id:
             color = (255, 255, 255)
         rect = json.loads(players[key])['rect']
-        atr = json.loads(players[key])['atr']
         pygame.draw.rect(screen, color, pygame.Rect(rect[0], rect[1], rect[2], rect[3]))
-        if atr['swd']['cooldown'] > 0:
-            img = pygame.transform.rotate(assets.get('sword', 4), atr['swd']['angle'] - 45)
-            rect = img.get_rect(center=(atr['swd']['pos'][0], atr['swd']['pos'][1]))
+    for sword in swords:
+        swd = json.loads(swords[sword])
+        if swd['cooldown'] > 0:
+            img = pygame.transform.rotate(assets.get('sword', 4), swd['angle'] - 45)
+            rect = img.get_rect(center=(swd['pos'][0], swd['pos'][1]))
             screen.blit(img, rect)
     pygame.display.update()
     # Set FPS

@@ -12,13 +12,14 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(addr)
 
 players = {}
-objects = [[200, 200, 40, 40]]
+swords = {}
+objects = []
 
 class Msg:
     def __init__(self, data):
         self.data = data
     def send(self, conn):
-        msg = json.dumps({"data":self.data}).encode('utf-8')
+        msg = json.dumps(self.data).encode('utf-8')
         msg_length = len(msg)
         send_length = str(msg_length).encode('utf-8') + b' ' * (Header - len(str(msg_length).encode('utf-8')))
         conn.send(send_length)
@@ -45,6 +46,9 @@ def handle_client(conn, addr):
                     Msg(players).send(conn)
                 if msg['type'] == 'objects':
                     Msg(objects).send(conn)
+                if msg['type'] == 'swords':
+                    swords[id] = msg['data']
+                    Msg(swords).send(conn)
     conn.close()
 def start():
     server.listen()
