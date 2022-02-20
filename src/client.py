@@ -4,7 +4,7 @@ from debug import debug
 os.system('clear')
 
 Header = 8
-port = 5000
+port = 2000
 host = '10.0.0.29'
 addr = (host, port)
 Disconnect = "!DISCONNECT!"
@@ -47,12 +47,11 @@ class Controller:
 class Player:
     def __init__(self, rect, speed=5):
         self.rect = rect
-        self.dagr = {'cooldown': 0, 'angle': 0, 'pos': [0, 0]}
-        self.atr = {}
+        self.atr = {'health': 3}
         self.xv = 0
         self.yv = 0
         self.speed = speed
-    def tick(self, objects):
+    def tick(self, objects, daggers):
         keys = Controller().check()
         # Movement
         self.xv = 0
@@ -63,7 +62,7 @@ class Player:
         if keys['down']: self.yv = self.speed
         self.rect.x += int(self.xv)
         self.rect.y += int(self.yv)
-        # Object Collision®
+        # Object Collision
         for obj in objects:
             rect = self.rect
             obj = pygame.Rect(obj[0], obj[1], obj[2], obj[3])
@@ -72,19 +71,18 @@ class Player:
                 if abs(obj.bottom - rect.top) < 10: self.rect.y -= round(self.yv)
                 if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
                 if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
-        # Change Attack Cooldown
-        self.dagr['cooldown'] -= 1
-        if self.dagr['cooldown'] > 0 and self.dagr['cooldown'] < 30:
-            vec = pygame.math.Vector2()
-            vec.from_polar((5, self.dagr['angle']*-1))
-            self.dagr['pos'][0] += vec[0]
-            self.dagr['pos'][1] += vec[1]
+        for dagger in daggers:
+            dagr = daggers[dagger]
+            if dagr['cooldown'] < 0:
+                self.atr['remove': dagger]
+            dagrRect = pygame.Rect(dagr['pos'][0], dagr['pos'][1], 32, 32)
+            if self.rect.colliderect(dagrRect):
+                if not dagger == id:
+                    Msg('remove', 'dagger', dagger).send()
+                    self.atr['health'] -= 1
     def attack(self, pos):
-        if dagr['cooldown'] > 0:
-            return
-        self.dagr['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
-        self.dagr['angle'] = 360-math.atan2(pos[1]-self.dagr['pos'][1], pos[0]-self.dagr['pos'][0])*180/math.pi
-        self.dagr['cooldown'] = 45
+        dagger = {'pos': [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2], 'angle': 360-math.atan2(pos[1]-self.rect.y + self.rect.height/2, pos[0]-self.rect.x + self.rect.width/2)*180/math.pi, 'cooldown': 45}
+        Msg('add', 'dagger', dagger).send()
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
 
@@ -102,9 +100,9 @@ while running:
     rect = [player.rect.x, player.rect.y, player.rect.width, player.rect.height]
     players = Msg('fetch', 'players', {'rect': rect, 'atr': player.atr}).send()
     objects = Msg('fetch', 'objects').send()
-    daggers = Msg('fetch', 'daggers', player.dagr).send()
+    daggers = Msg('fetch', 'daggers').send()
     # Tick
-    player.tick(objects)
+    player.tick(objects, daggers)
     # Render
     screen.fill((230, 50, 50))
     for obj in objects:
@@ -116,12 +114,13 @@ while running:
         rect = json.loads(players[key])['rect']
         pygame.draw.rect(screen, color, pygame.Rect(rect[0], rect[1], rect[2], rect[3]))
     for dagger in daggers:
-        dagr = json.loads(daggers[dagger])
+        dagr = daggers[dagger]
         if dagr['cooldown'] > 0:
             img = pygame.transform.rotate(assets.get('dagger', 4), dagr['angle'] - 45)
             rect = img.get_rect(center=(dagr['pos'][0], dagr['pos'][1]))
             screen.blit(img, rect)
-    debug(id)
+    debug(player.atr['health'])
+    debug(len(daggers), 25)
     pygame.display.update()
     # Set FPS
     clock.tick(60)

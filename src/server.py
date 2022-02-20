@@ -1,9 +1,9 @@
-import socket, threading, time, os, json
+import socket, threading, time, os, json, pygame
 
 os.system('clear')
 
 Header = 8
-port = 5000
+port = 2000
 host = '10.0.0.29'
 addr = (host, port)
 Disconnect = "!DISCONNECT!"
@@ -47,8 +47,28 @@ def handle_client(conn, addr):
                 if msg['type'] == 'objects':
                     Msg(objects).send(conn)
                 if msg['type'] == 'daggers':
-                    daggers[id] = msg['data']
+                    try:
+                        daggers[id]['cooldown'] -= 1
+                        if daggers[id]['cooldown'] > 0 and daggers[id]['cooldown'] < 30:
+                            vec = pygame.math.Vector2()
+                            vec.from_polar((10, daggers[id]['angle']*-1))
+                            daggers[id]['pos'][0] += vec[0]
+                            daggers[id]['pos'][1] += vec[1]
+                        if daggers[id]['cooldown'] == 0:
+                            daggers.pop(id)
+                    except:
+                        pass
                     Msg(daggers).send(conn)
+            if msg['request'] == 'remove':
+                if msg['type'] == 'dagger':
+                    Msg('null').send(conn)
+                    key = msg['data'].replace('"', '')
+                    daggers.pop(key)
+            if msg['request'] == 'add':
+                if msg['type'] == 'dagger':
+                    Msg('created.').send(conn)
+                    daggers[id] = json.loads(msg['data'])
+            print(msg)
     conn.close()
 def start():
     server.listen()
