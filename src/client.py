@@ -46,7 +46,7 @@ class Controller:
 class Player:
     def __init__(self, rect, speed=5):
         self.rect = rect
-        self.swd = {'cooldown': 0, 'angle': 0, 'pos': [0, 0]}
+        self.dagr = {'cooldown': 0, 'angle': 0, 'pos': [0, 0]}
         self.atr = {}
         self.xv = 0
         self.yv = 0
@@ -72,18 +72,18 @@ class Player:
                 if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
                 if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
         # Change Attack Cooldown
-        if swd['cooldown'] > 0:
-            swd['cooldown'] -= 1
+        if dagr['cooldown'] > 0:
+            dagr['cooldown'] -= 1
             vec = pygame.math.Vector2()
-            vec.from_polar((5, swd['angle']*-1))
-            swd['pos'][0] += vec[0]
-            swd['pos'][1] += vec[1]
+            vec.from_polar((5, dagr['angle']*-1))
+            dagr['pos'][0] += vec[0]
+            dagr['pos'][1] += vec[1]
     def attack(self, pos):
-        if swd['cooldown'] > 0:
+        if dagr['cooldown'] > 0:
             return
-        self.swd['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
-        self.swd['angle'] = 360-math.atan2(pos[1]-self.atr['swd']['pos'][1], pos[0]-self.atr['swd']['pos'][0])*180/math.pi
-        self.swd['cooldown'] = 30
+        self.dagr['pos'] = [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2]
+        self.dagr['angle'] = 360-math.atan2(pos[1]-self.atr['dagr']['pos'][1], pos[0]-self.atr['dagr']['pos'][0])*180/math.pi
+        self.dagr['cooldown'] = 30
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
 
@@ -101,7 +101,7 @@ while running:
     rect = [player.rect.x, player.rect.y, player.rect.width, player.rect.height]
     players = Msg('fetch', 'players', {'rect': rect, 'atr': player.atr}).send()
     objects = Msg('fetch', 'objects').send()
-    swords = Msg('fetch', 'swords', player.swd).send()
+    daggers = Msg('fetch', 'daggers', player.dagr).send()
     # Tick
     player.tick(objects)
     # Render
@@ -114,11 +114,11 @@ while running:
             color = (255, 255, 255)
         rect = json.loads(players[key])['rect']
         pygame.draw.rect(screen, color, pygame.Rect(rect[0], rect[1], rect[2], rect[3]))
-    for sword in swords:
-        swd = json.loads(swords[sword])
-        if swd['cooldown'] > 0:
-            img = pygame.transform.rotate(assets.get('sword', 4), swd['angle'] - 45)
-            rect = img.get_rect(center=(swd['pos'][0], swd['pos'][1]))
+    for dagger in daggers:
+        dagr = json.loads(daggers[dagger])
+        if dagr['cooldown'] > 0:
+            img = pygame.transform.rotate(assets.get('dagger', 4), dagr['angle'] - 45)
+            rect = img.get_rect(center=(dagr['pos'][0], dagr['pos'][1]))
             screen.blit(img, rect)
     pygame.display.update()
     # Set FPS

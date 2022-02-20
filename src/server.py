@@ -12,7 +12,7 @@ server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(addr)
 
 players = {}
-swords = {}
+daggers = {}
 objects = []
 
 class Msg:
@@ -46,9 +46,9 @@ def handle_client(conn, addr):
                     Msg(players).send(conn)
                 if msg['type'] == 'objects':
                     Msg(objects).send(conn)
-                if msg['type'] == 'swords':
-                    swords[id] = msg['data']
-                    Msg(swords).send(conn)
+                if msg['type'] == 'daggers':
+                    daggers[id] = msg['data']
+                    Msg(daggers).send(conn)
     conn.close()
 def start():
     server.listen()
