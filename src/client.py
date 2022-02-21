@@ -1,10 +1,10 @@
-import pygame, os, math, socket, json, assets.assets as assets
+import pygame, os, math, socket, json, assets.assets as assets, sys
 from debug import debug
 
 os.system('clear')
 
 Header = 8
-port = 2000
+port = 8000
 host = '10.0.0.29'
 addr = (host, port)
 Disconnect = "!DISCONNECT!"
@@ -71,6 +71,7 @@ class Player:
                 if abs(obj.bottom - rect.top) < 10: self.rect.y -= round(self.yv)
                 if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
                 if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
+        # Check Daggers
         for dagger in daggers:
             dagr = daggers[dagger]
             if dagr['cooldown'] < 0:
@@ -80,11 +81,13 @@ class Player:
                 if not dagger == id:
                     Msg('remove', 'dagger', dagger).send()
                     self.atr['health'] -= 1
+        if self.atr['health'] < 1:
+            Msg(Disconnect).send()
+            sys.exit()
     def attack(self, pos):
         dagger = {'pos': [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2], 'angle': 360-math.atan2(pos[1]-self.rect.y + self.rect.height/2, pos[0]-self.rect.x + self.rect.width/2)*180/math.pi, 'cooldown': 45}
         Msg('add', 'dagger', dagger).send()
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
-
 
 # Game Loop
 running = True
@@ -120,7 +123,6 @@ while running:
             rect = img.get_rect(center=(dagr['pos'][0], dagr['pos'][1]))
             screen.blit(img, rect)
     debug(player.atr['health'])
-    debug(len(daggers), 25)
     pygame.display.update()
     # Set FPS
     clock.tick(60)

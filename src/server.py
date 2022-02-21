@@ -3,7 +3,7 @@ import socket, threading, time, os, json, pygame
 os.system('clear')
 
 Header = 8
-port = 2000
+port = 8000
 host = '10.0.0.29'
 addr = (host, port)
 Disconnect = "!DISCONNECT!"
