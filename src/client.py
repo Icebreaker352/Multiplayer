@@ -1,17 +1,22 @@
-import pygame, os, math, socket, json, assets.assets as assets, sys
+import pygame, os, math, socket, json, sys
 from debug import debug
+from res.assets.assets import get
 
+# Clear Console
 os.system('clear')
 
+# Constants
 Header = 8
 port = 8000
 host = '10.0.0.29'
 addr = (host, port)
 Disconnect = "!DISCONNECT!"
 
+# Connect to Server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(addr)
 
+# Create Server messaging Class
 class Msg:
     def __init__(self, request, type='null', data='null'):
         self.request = request
@@ -29,11 +34,15 @@ class Msg:
             recv = json.loads(client.recv(msg_length).decode('utf-8'))
             return recv
 
+# Get ID
 id = Msg('fetch', 'id').send()
+
+# Setup Client-Side Stuff
 pygame.init()
+pygame.display.set_icon(get('icon'))
+pygame.display.set_caption('Client')
 screen = pygame.display.set_mode((400, 400))
 clock = pygame.time.Clock()
-pygame.display.set_icon(assets.get('icon'))
 
 class Controller:
     def __init__(self):
@@ -87,6 +96,7 @@ class Player:
     def attack(self, pos):
         dagger = {'pos': [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2], 'angle': 360-math.atan2(pos[1]-self.rect.y + self.rect.height/2, pos[0]-self.rect.x + self.rect.width/2)*180/math.pi, 'cooldown': 45}
         Msg('add', 'dagger', dagger).send()
+
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
 # Game Loop
@@ -119,7 +129,7 @@ while running:
     for dagger in daggers:
         dagr = daggers[dagger]
         if dagr['cooldown'] > 0:
-            img = pygame.transform.rotate(assets.get('dagger', 4), dagr['angle'] - 45)
+            img = pygame.transform.rotate(get('dagger', 4), dagr['angle'] - 45)
             rect = img.get_rect(center=(dagr['pos'][0], dagr['pos'][1]))
             screen.blit(img, rect)
     debug(player.atr['health'])
