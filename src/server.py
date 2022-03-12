@@ -13,7 +13,6 @@ server.bind(addr)
 
 players = {}
 daggers = {}
-objects = []
 
 class Msg:
     def __init__(self, data):
@@ -44,8 +43,6 @@ def handle_client(conn, addr):
                 if msg['type'] == 'players':
                     players[id] = msg['data']
                     Msg(players).send(conn)
-                if msg['type'] == 'objects':
-                    Msg(objects).send(conn)
                 if msg['type'] == 'daggers':
                     try:
                         daggers[id]['cooldown'] -= 1
@@ -58,6 +55,13 @@ def handle_client(conn, addr):
                             daggers.pop(id)
                     except:
                         pass
+                    try:
+                        if daggers[id]['cooldown'] > 30:
+                            rect = json.loads(players[id])['rect']
+                            daggers[id]['pos'][0] = rect[0] + rect[2]/2
+                            daggers[id]['pos'][1] = rect[1] + rect[3]/2
+                    except:
+                        pass
                     Msg(daggers).send(conn)
             if msg['request'] == 'remove':
                 if msg['type'] == 'dagger':
@@ -66,9 +70,8 @@ def handle_client(conn, addr):
                     daggers.pop(key)
             if msg['request'] == 'add':
                 if msg['type'] == 'dagger':
-                    Msg('created.').send(conn)
+                    Msg('null').send(conn)
                     daggers[id] = json.loads(msg['data'])
-            print(msg)
     conn.close()
 def start():
     server.listen()

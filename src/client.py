@@ -1,4 +1,4 @@
-import pygame, os, math, socket, json, sys
+import pygame, os, math, socket, json, sys, random
 from debug import debug
 from res.assets.assets import get
 
@@ -56,11 +56,11 @@ class Controller:
 class Player:
     def __init__(self, rect, speed=5):
         self.rect = rect
-        self.atr = {'health': 3}
+        self.atr = {'health': 3, 'atkCool': 0}
         self.xv = 0
         self.yv = 0
         self.speed = speed
-    def tick(self, objects, daggers):
+    def tick(self, daggers):
         keys = Controller().check()
         # Movement
         self.xv = 0
@@ -71,31 +71,24 @@ class Player:
         if keys['down']: self.yv = self.speed
         self.rect.x += int(self.xv)
         self.rect.y += int(self.yv)
-        # Object Collision
-        for obj in objects:
-            rect = self.rect
-            obj = pygame.Rect(obj[0], obj[1], obj[2], obj[3])
-            if rect.colliderect(obj):
-                if abs(obj.top - rect.bottom) < 10: self.rect.y -= round(self.yv)
-                if abs(obj.bottom - rect.top) < 10: self.rect.y -= round(self.yv)
-                if abs(obj.right - rect.left) < 10: self.rect.x -= round(self.xv)
-                if abs(obj.left - rect.right) < 10: self.rect.x -= round(self.xv)
-        # Check Daggers
+        # Check Collision with Dagger
         for dagger in daggers:
             dagr = daggers[dagger]
-            if dagr['cooldown'] < 0:
-                self.atr['remove': dagger]
             dagrRect = pygame.Rect(dagr['pos'][0], dagr['pos'][1], 32, 32)
             if self.rect.colliderect(dagrRect):
                 if not dagger == id:
                     Msg('remove', 'dagger', dagger).send()
                     self.atr['health'] -= 1
+        self.atr['atkCool'] -= 1
+
         if self.atr['health'] < 1:
             Msg(Disconnect).send()
             sys.exit()
     def attack(self, pos):
-        dagger = {'pos': [self.rect.x + self.rect.width/2, self.rect.y + self.rect.height/2], 'angle': 360-math.atan2(pos[1]-self.rect.y + self.rect.height/2, pos[0]-self.rect.x + self.rect.width/2)*180/math.pi, 'cooldown': 45}
+        if self.atr['atkCool'] > 0: return
+        dagger = {'pos': [0, 0], 'angle': (360-math.atan2(pos[1]-self.rect.y + self.rect.height/2, pos[0]-self.rect.x + self.rect.width/2)*180/math.pi)+random.randrange(-10, 10), 'cooldown': 45}
         Msg('add', 'dagger', dagger).send()
+        self.atr['atkCool'] = 45
 
 player = Player(pygame.Rect(20, 20, 25, 25), 5)
 
@@ -112,14 +105,11 @@ while running:
     # Exchange Data
     rect = [player.rect.x, player.rect.y, player.rect.width, player.rect.height]
     players = Msg('fetch', 'players', {'rect': rect, 'atr': player.atr}).send()
-    objects = Msg('fetch', 'objects').send()
     daggers = Msg('fetch', 'daggers').send()
     # Tick
-    player.tick(objects, daggers)
+    player.tick(daggers)
     # Render
     screen.fill((230, 50, 50))
-    for obj in objects:
-        pygame.draw.rect(screen, (0, 255, 255), pygame.Rect(obj[0], obj[1], obj[2], obj[3]))
     for key in players:
         color = (70, 70, 70)
         if key == id:

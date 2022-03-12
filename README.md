@@ -4,8 +4,15 @@
 
 # TODO
 - ~~Throwing daggers~~
+    - ~~Stick to player~~
+    - ~~Adjust angle~~
 - Skills
 - Monsters
     - Drop Loot, & Armor
+- GUI
+    - Inventory System
+        - List
+        - Some way to display the inventory
+        - Item Identifiers
 - Magic
 - Different Villages
